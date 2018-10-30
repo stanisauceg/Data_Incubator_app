@@ -264,25 +264,43 @@ data.clean <- data.clean %>%
          duration_sec:is.weekend) %>%
   mutate(elev_change = end_station_elevation - start_station_elevation)
 
-# bin rides by endpoints
-trip.counts <- data.clean %>%
-  group_by(start_station_latitude, start_station_longitude, 
-           end_station_latitude, end_station_longitude, hour(start_time)) %>%
-  rename(start_hour = 'hour(start_time)') %>%
-  summarise(start_count = n()) %>%
-  as_data_frame()
+# # bin rides by endpoints
+# trip.counts <- data.clean %>%
+#   group_by(start_station_latitude, start_station_longitude, 
+#            end_station_latitude, end_station_longitude, hour(start_time)) %>%
+#   rename(start_hour = 'hour(start_time)') %>%
+#   summarise(start_count = n()) %>%
+#   as_data_frame()
 
-# Fig 1 to share ####
-ggplot(sample_frac(trip.counts, size = 0.1)) +
+# Fig 1 to share #### 
+# ggplot(sample_frac(trip.counts, size = 0.1)) +
+#   geom_segment(aes(x = start_station_longitude, y = start_station_latitude,
+#                    xend = end_station_longitude, yend = end_station_latitude,
+#                    alpha = start_count/10), show.legend = FALSE) +
+#   geom_point(aes(x = start_station_longitude, y = start_station_latitude,
+#                  size = start_count/6), color = "blue", alpha = 0.2) +
+#   geom_point(aes(x = end_station_longitude, y = end_station_latitude,
+#                  size = start_count/6), color = "red", alpha = 0.05) +
+#   xlim(c(-122.48, -122.37)) + 
+#   ylim(c(37.745, 37.81)) +
+#   labs(title = "SF hourly bike traffic", x = "Longitude", y = "Latitude", size = "station traffic in\nriders per minute") +
+#   theme_bw() +
+#   facet_wrap(.~ start_hour)
+scale <- max(data.clean$start_time) - min(data.clean$start_time)
+
+ggplot(sample_frac(data.clean, size = 1/scale)) +
   geom_segment(aes(x = start_station_longitude, y = start_station_latitude,
-                   xend = end_station_longitude, yend = end_station_latitude,
-                   alpha = start_count/10), show.legend = FALSE) +
-  geom_point(aes(x = start_station_longitude, y = start_station_latitude,
-                 size = start_count/6), color = "blue", alpha = 0.2) +
-  geom_point(aes(x = end_station_longitude, y = end_station_latitude,
-                 size = start_count/6), color = "red", alpha = 0.05) +
+                   xend = end_station_longitude, yend = end_station_latitude),
+               alpha = 0.1, show.legend = FALSE) +
+  geom_point(aes(x = start_station_longitude, y = start_station_latitude),
+             color = "blue", alpha = 0.2, stat = "sum") +
+  geom_point(aes(x = end_station_longitude, y = end_station_latitude),
+             color = "red", alpha = 0.1, stat = "sum") +
+  scale_size(range = c(.1, 5)) +
   xlim(c(-122.48, -122.37)) + 
   ylim(c(37.745, 37.81)) +
-  labs(title = "SF hourly bike traffic", x = "Longitude", y = "Latitude", size = "station traffic in\nriders per minute") +
+  labs(title = "SF hourly bike traffic", x = "Longitude", y = "Latitude", 
+       col = c("departures", "arrivals"), size = "station traffic \nper hour") +
   theme_bw() +
-  facet_wrap(.~ start_hour)
+  facet_wrap(.~ hour(start_time)) +
+  coord_equal()
