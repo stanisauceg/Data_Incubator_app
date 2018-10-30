@@ -286,7 +286,10 @@ data.clean <- data.clean %>%
 #   labs(title = "SF hourly bike traffic", x = "Longitude", y = "Latitude", size = "station traffic in\nriders per minute") +
 #   theme_bw() +
 #   facet_wrap(.~ start_hour)
-scale <- max(data.clean$start_time) - min(data.clean$start_time)
+
+# set scaling factor manually
+max(data.clean$start_time) - min(data.clean$start_time)
+scale <- 459.5914 
 
 ggplot(sample_frac(data.clean, size = 1/scale)) +
   geom_segment(aes(x = start_station_longitude, y = start_station_latitude,
